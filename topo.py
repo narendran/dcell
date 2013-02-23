@@ -4,6 +4,7 @@ from mininet.cli import CLI
 from mininet.net import Mininet
 from mininet.topo import Topo
 
+import sys
 from util import *
 
 """
@@ -34,33 +35,35 @@ class DCellTopo(Topo):
       print "DCell levels above 1 don't work yet..."
       sys.exit(1)
 
-    create_dcell([], level, n + level)
+    self.create_dcell([], level, n + level)
 
-  def add_host(list):
+  def add_host(self, list):
     name, ids = make_ids(list, HOST_CPU)
+    print "Add CPU %s" % name
     return self.addHost(name, **ids)
 
-  def add_switch(list, type):
-    (name, ids) = make_ids(list, type):
+  def add_switch(self, list, type):
+    name, ids = make_ids(list, type)
+    print "Add %s %s" % (("switch" if type == SWITCH else "host"), name)
     return self.addSwitch(name, **ids)
 
   def create_dcell(self, prefix, level, n):
     if level == 0:
       sw = self.add_switch(prefix + [0], SWITCH)
       for i in range(1, n + 1):
-        list = prefix + [i]
-        host = self.add_switch(list, HOST_SW)
-        cpu  = self.add_host(list)
+        l = prefix + [i]
+        host = self.add_switch(l, HOST_SW)
+        cpu  = self.add_host(l)
         self.addLink(host, cpu)
         self.addLink(sw, host)
       return
 
     for i in range(1, n + 1):
-      create_dcell(prefix + [i], level - 1, n - 1)
+      self.create_dcell(prefix + [i], level - 1, n - 1)
       # TODO: Add inter-DCell0 links...
 
 if __name__ == "__main__":
-  topo = DCellTopo(level=0)
+  topo = DCellTopo(level=int(sys.argv[1]))
   net = Mininet(topo = topo)
   net.start()
   CLI(net)
