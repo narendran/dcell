@@ -96,7 +96,7 @@ class RipLController(EventMixin):
     "Install entries on route between two switches."
     in_name = self.t.id_gen(dpid = event.dpid).name_str()
     out_name = self.t.id_gen(dpid = out_dpid).name_str()
-    route = self.r.get_route(in_name, out_name)
+    route = self.r.get_route(in_name, out_name, packet)
     log.info("route: %s" % route)
     match = of.ofp_match.from_packet(packet)
     for i, node in enumerate(route):
