@@ -5,7 +5,7 @@ from mininet.net import Mininet
 from mininet.topo import Topo
 
 import sys
-from util import *
+from nodeid import DCellNodeID
 
 """
 from mininet.link import TCLink
@@ -35,25 +35,23 @@ class DCellTopo(Topo):
       print "DCell levels above 1 don't work yet..."
       sys.exit(1)
 
+    self.level = level
     self.create_dcell([], level, n + level)
 
-  def add_host(self, list):
-    name, ids = make_ids(list, HOST_CPU)
-    print "Add CPU %s" % name
-    return self.addHost(name, **ids)
+  def id_gen(self, *args, **kwargs):
+    return DCellNodeID(self.level, *args, **kwargs)
 
-  def add_switch(self, list, type):
-    name, ids = make_ids(list, type)
-    print "Add %s %s" % (("switch" if type == SWITCH else "host"), name)
-    return self.addSwitch(name, **ids)
+  def add(self, prefix, type):
+    id = self.id_gen(prefix, type)
+    return self.addHost(str(id), dpid=id.dpid, ip=id.ip_str(), mac=id.mac_str())
 
   def create_dcell(self, prefix, level, n):
     if level == 0:
-      sw = self.add_switch(prefix + [0], SWITCH)
+      sw = self.add(prefix + [0], DCellNodeID.SWITCH)
       for i in range(1, n + 1):
         l = prefix + [i]
-        host = self.add_switch(l, HOST_SW)
-        cpu  = self.add_host(l)
+        host = self.add(l, DCellNodeID.HOST_SW)
+        cpu  = self.add(l, DCellNodeID.HOST_CPU)
         self.addLink(host, cpu)
         self.addLink(sw, host)
       return

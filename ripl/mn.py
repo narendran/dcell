@@ -8,8 +8,9 @@ To use this file to run a RipL-specific topology on Mininet.  Example:
 """
 
 from ripl.dctopo import FatTreeTopo #, VL2Topo, TreeTopo
+from topo import DCellTopo
 
-topos = { 'ft': FatTreeTopo}
+topos = { 'ft': FatTreeTopo, 'dcell': DCellTopo}
 #,
 #          'vl2': VL2Topo,
 #          'tree': TreeTopo }

@@ -2,6 +2,7 @@
 
 from mininet.util import makeNumeric
 
+from routing import DCellRouting
 from ripl.routing import STStructuredRouting, RandomStructuredRouting
 from ripl.routing import HashedStructuredRouting
 
@@ -34,7 +35,8 @@ DEF_ROUTING = 'st'
 ROUTING = {
     'st': STStructuredRouting,
     'random': RandomStructuredRouting,
-    'hashed': HashedStructuredRouting
+    'hashed': HashedStructuredRouting,
+    'dcell': DCellRouting
 }
 
 def getRouting( routing_type, topo ):
