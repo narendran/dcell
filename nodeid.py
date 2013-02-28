@@ -22,7 +22,7 @@ class DCellNodeID(NodeID):
     self.type = dpid & 0xff
 
   def from_name(self, name):
-    l = name.split(".")
+    l = name.split("_")
     self.prefix = [int(x) for x in l[:-1]]
     self.type_str = l[-1]
     self.type = self.TYPE_MAP[self.type_str]
@@ -31,7 +31,7 @@ class DCellNodeID(NodeID):
     return self.name_str()
 
   def name_str(self):
-    return ".".join(["%d" % x for x in self.prefix] + [self.type_str])
+    return "_".join(["%d" % x for x in self.prefix] + [self.type_str])
 
   # TODO: Can't go past DCell 1
   def ip_str(self):
