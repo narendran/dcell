@@ -14,7 +14,7 @@ class DCellNodeID(NodeID):
       self.type = type
 
     if not name: self.type_str = self.TYPES[self.type - 1]
-    if not dpid: self.dpid = sum([x << (8 * i) for x, i in zip(self.prefix + [type], range(len(self.prefix), -1, -1))])
+    if not dpid: self.dpid = sum([x << (8 * i) for x, i in zip(self.prefix + [self.type], range(len(self.prefix), -1, -1))])
 
   def from_dpid(self, dpid, level):
     self.dpid = dpid
