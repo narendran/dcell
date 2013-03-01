@@ -36,8 +36,8 @@ class DCellTopo(Topo):
       sys.exit(1)
 
     self.level = level
-    self.sws = []
-    self._create_dcell([], level, n + level)
+    self.sws = {}
+    self._create_dcell([], level, n)
 
   def id_gen(self, *args, **kwargs):
     return DCellNodeID(self.level, *args, **kwargs)
@@ -46,8 +46,9 @@ class DCellTopo(Topo):
     id = self.id_gen(prefix, type)
     args = {'dpid': "%016x" % id.dpid, 'ip': id.ip_str(), 'mac': id.mac_str()}
     if type == DCellNodeID.HOST_CPU: return self.addHost(str(id), **args)
-    self.sws.append(id)
-    return self.addSwitch(str(id), **args)
+    sw = self.addSwitch(str(id), **args)
+    if type == DCellNodeID.HOST_SW: self.sws[str(id)] = (id, sw)
+    return sw
 
   def _create_dcell(self, prefix, level, n):
     if level == 0:
@@ -60,14 +61,21 @@ class DCellTopo(Topo):
         self.addLink(sw, host)
       return
 
+    # TODO: Generalize to DCell_k, k > 1
+    for i in range(1, n + 2):
+      self._create_dcell(prefix + [i], level - 1, n)
     for i in range(1, n + 1):
-      self._create_dcell(prefix + [i], level - 1, n - 1)
-      # TODO: Add inter-DCell0 links...
+      for j in range(i + 1, n + 2):
+        id1 = self.id_gen(prefix + [i, j - 1], DCellNodeID.HOST_SW)
+        id2 = self.id_gen(prefix + [j, i], DCellNodeID.HOST_SW)
+        n1 = self.sws[str(id1)][1]
+        n2 = self.sws[str(id2)][1]
+        self.addLink(n1, n2)
 
   # Used by riplpox
   LAYER_EDGE = DCellNodeID.HOST_SW
   def layer_nodes(self, layer):
-    return [x.name_str() for x in self.sws if x.type == layer]
+    return [x[0].name_str() for x in self.sws.values() if x[0].type == layer]
 
   def down_nodes(self, node):
     assert "host" in node
