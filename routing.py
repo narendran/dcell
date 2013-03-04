@@ -19,11 +19,17 @@ class DCellRouting(Routing):
 
     # TODO: DCell1 only
     s = src_id.prefix[0]
-    d = dst_id.prefix[1]
+    d = dst_id.prefix[0]
     assert s != d
     if s < d: min = s; max = d
     else: min = d; max = s
 
-    n1 = self.topo.id_gen([min, max - 1], DCellNodeID.HOST_SW)
-    n2 = self.topo.id_gen([max, min], DCellNodeID.HOST_SW)
-    return self.get_route(src, n1.name_str(), pkt) + self.get_route(n2.name_str(), dst, pkt)
+    n1 = self.topo.id_gen([min, max - 1], DCellNodeID.HOST_SW).name_str()
+    n2 = self.topo.id_gen([max, min], DCellNodeID.HOST_SW).name_str()
+    if min == s:
+      r1 = self.get_route(src, n1, pkt)
+      r2 = self.get_route(n2, dst, pkt)
+    else:
+      r1 = self.get_route(src, n2, pkt)
+      r2 = self.get_route(n1, dst, pkt)
+    return r1 + r2
