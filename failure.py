@@ -1,9 +1,11 @@
 from nodeid import DCellNodeID
+import sys
 from time import sleep
 
 def sim_failures(topo, net = None):
   print "Started thread"
-  sleep(5)
+  while not os.access("linkfail.txt", os.R_OK):
+    sleep(1)
   print "Failing link"
   n = ("1_1_host", "2_1_host")
   topo.link_down(*n)
