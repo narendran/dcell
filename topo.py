@@ -33,13 +33,12 @@ def start_monitor():
 def start_iperf(net, src, dst):
   print "Starting iperf server..."
   server = net.getNodeByName(dst)
-  #server.popen("iperf -s -p 5001", shell=True)
+  server.popen("iperf -s -p 5001", shell=True)
 
   print "Starting iperf client..."
   client = net.getNodeByName(src)
-  print client.IP()
-  client.popen("echo sfasdf %s >foo.txt" % server.IP(), shell=True)
-  #client.popen("iperf -c %s -p 5001 -t 60 -i 1 -Z bic" % server.IP(), shell=True)
+  client.popen("echo sfasdf >foo.txt", shell=True)
+  client.popen("iperf -c %s -p 5001 -t 60 -i 1 -Z bic" % server.IP(), shell=True)
 
 class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
@@ -66,10 +65,8 @@ class DCellTopo(Topo):
 
   def _add_node(self, prefix, type):
     id = self.id_gen(prefix, type)
-    if type == DCellNodeID.HOST_CPU: return self.addHost(str(id))
-    args = {'ip': id.ip_str()}
-    args['dpid'] = "%016x" % id.dpid
-    args["mac"] = id.mac_str()
+    args = {'dpid': "%016x" % id.dpid, 'ip': id.ip_str(), 'mac': id.mac_str()}
+    if type == DCellNodeID.HOST_CPU: return self.addHost(str(id), **args)
     sw = self.addSwitch(str(id), **args)
     if type == DCellNodeID.HOST_SW: self.sws[str(id)] = (id, sw)
     return sw
@@ -113,7 +110,7 @@ if __name__ == "__main__":
   net.start()
 
   #monitor = start_monitor()
-  start_iperf(net, "1_1_cpu", "5_4_cpu")
+  start_iperf(net, "cpu_1_1", "cpu_5_4")
   print "Waiting..."
   sleep(5)
   #CLI(net)
