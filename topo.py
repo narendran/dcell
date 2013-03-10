@@ -1,13 +1,45 @@
 #!/usr/bin/python
 
 from mininet.cli import CLI
-from mininet.node import RemoteController
+from mininet.link import TCLink
+from mininet.node import CPULimitedHost, RemoteController
 from mininet.net import Mininet
 from mininet.topo import Topo
 
-import sys
 from failure import sim_failures
 from nodeid import DCellNodeID
+
+import sys
+from multiprocessing import Process
+from subprocess import Popen
+from time import sleep
+
+OUTPUT_DIR = "out"
+
+# Taken from PA 2 starter code
+def monitor_devs_ng(fname="%s/txrate.txt" % OUTPUT_DIR, interval_sec=0.01):
+  """Uses bwm-ng tool to collect iface tx rate stats.  Very reliable."""
+  print "Starting monitor..."
+  cmd = ("sleep 1; bwm-ng -t %s -o csv "
+         "-u bits -T rate -C ',' > %s" %
+         (interval_sec * 1000, fname))
+  Popen(cmd, shell=True).wait()
+
+def start_monitor():
+  p = Process(target=monitor_devs_ng, args=())
+  p.start()
+  return p
+
+def start_iperf(net, src, dst):
+  print "Starting iperf server..."
+  server = net.getNodeByName(dst)
+  #server.popen("iperf -s -p 5001", shell=True)
+
+  print "Starting iperf client..."
+  client = net.getNodeByName(src)
+  print client.IP()
+  client.popen("echo sfasdf %s >foo.txt" % server.IP(), shell=True)
+  #client.popen("iperf -c %s -p 5001 -t 60 -i 1 -Z bic" % server.IP(), shell=True)
 
 class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
@@ -18,6 +50,7 @@ class DCellTopo(Topo):
       sys.exit(1)
 
     self.level = level
+    self.n = n
     self.sws = {}
     self._create_dcell([], level, n)
 
@@ -33,8 +66,10 @@ class DCellTopo(Topo):
 
   def _add_node(self, prefix, type):
     id = self.id_gen(prefix, type)
-    args = {'dpid': "%016x" % id.dpid, 'ip': id.ip_str(), 'mac': id.mac_str()}
-    if type == DCellNodeID.HOST_CPU: return self.addHost(str(id), **args)
+    if type == DCellNodeID.HOST_CPU: return self.addHost(str(id))
+    args = {'ip': id.ip_str()}
+    args['dpid'] = "%016x" % id.dpid
+    args["mac"] = id.mac_str()
     sw = self.addSwitch(str(id), **args)
     if type == DCellNodeID.HOST_SW: self.sws[str(id)] = (id, sw)
     return sw
@@ -74,9 +109,19 @@ class DCellTopo(Topo):
 
 if __name__ == "__main__":
   topo = DCellTopo()
-  net = Mininet(topo = topo, controller = RemoteController, autoSetMacs = True)
+  net = Mininet(topo = topo, host = CPULimitedHost, link = TCLink, controller = RemoteController, autoSetMacs = True)
   net.start()
-  sim_failures(topo, net)
-  CLI(net)
+
+  #monitor = start_monitor()
+  start_iperf(net, "1_1_cpu", "5_4_cpu")
+  print "Waiting..."
+  sleep(5)
+  #CLI(net)
+
+  #sim_failures(topo, net)
+
+  print "done"
+  #Popen("killall -9 iperf", shell=True).wait()
+  #monitor.terminate()
   net.stop()
 
