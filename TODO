@@ -1,7 +1,0 @@
-Completed:
-* Define mapping from DCell tuple to IP/MAC addresses
-* Create DCell0 topology
-
-High priority:
-* Add links between DCell0s
-* Figure out how to gut RipL routing engine
