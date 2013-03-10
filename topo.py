@@ -1,31 +1,13 @@
 #!/usr/bin/python
 
 from mininet.cli import CLI
+from mininet.node import RemoteController
 from mininet.net import Mininet
 from mininet.topo import Topo
 
 import sys
+from failure import sim_failures
 from nodeid import DCellNodeID
-
-"""
-from mininet.link import TCLink
-from mininet.log import lg
-from mininet.node import CPULimitedHost
-from mininet.util import dumpNodeConnections
-
-import subprocess
-from subprocess import Popen, PIPE
-from time import sleep, time
-from multiprocessing import Process
-import termcolor as T
-from argparse import ArgumentParser
-
-import sys
-import os
-from util.monitor import monitor_qlen
-from util.helper import stdev
-"""
-
 
 class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
@@ -39,8 +21,15 @@ class DCellTopo(Topo):
     self.sws = {}
     self._create_dcell([], level, n)
 
+    self.failed = []
+
   def id_gen(self, *args, **kwargs):
     return DCellNodeID(self.level, *args, **kwargs)
+
+  def link_down(self, *n):
+    self.failed.append(n)
+  def is_link_down(self, *n):
+    return n in self.failed
 
   def _add_node(self, prefix, type):
     id = self.id_gen(prefix, type)
@@ -55,6 +44,8 @@ class DCellTopo(Topo):
       sw = self._add_node(prefix + [0], DCellNodeID.SWITCH)
       for i in range(1, n + 1):
         l = prefix + [i]
+        print ".",
+        sys.stdout.flush()
         host = self._add_node(l, DCellNodeID.HOST_SW)
         cpu  = self._add_node(l, DCellNodeID.HOST_CPU)
         self.addLink(host, cpu)
@@ -82,9 +73,10 @@ class DCellTopo(Topo):
     return [node.replace("host", "cpu")]
 
 if __name__ == "__main__":
-  topo = DCellTopo(level=int(sys.argv[1]))
-  net = Mininet(topo = topo)
+  topo = DCellTopo()
+  net = Mininet(topo = topo, controller = RemoteController, autoSetMacs = True)
   net.start()
+  sim_failures(topo, net)
   CLI(net)
   net.stop()
 

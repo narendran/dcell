@@ -1,10 +1,13 @@
+from failure import sim_failures
 from nodeid import DCellNodeID
+from threading import Thread
 from ripl.routing import Routing
 
 class DCellRouting(Routing):
   def __init__(self, topo):
     Routing.__init__(self, topo)
-    print "Started routing"
+    t = Thread(target = sim_failures, args = (topo,))
+    t.start()
 
   def get_route(self, src, dst, pkt):
     print "Route from %s to %s" % (src, dst)
