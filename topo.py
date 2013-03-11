@@ -49,6 +49,7 @@ class DCellTopo(Topo):
 
     self.level = level
     self.n = n
+    self.bw = 100
     self.sws = {}
     self._create_dcell([], level, n)
 
@@ -80,7 +81,7 @@ class DCellTopo(Topo):
         host = self._add_node(l, DCellNodeID.HOST_SW)
         cpu  = self._add_node(l, DCellNodeID.HOST_CPU)
         self.addLink(host, cpu)
-        self.addLink(sw, host)
+        self.addLink(sw, host, bw=self.bw)
       return
 
     # TODO: Generalize to DCell_k, k > 1
@@ -92,7 +93,7 @@ class DCellTopo(Topo):
         id2 = self.id_gen(prefix + [j, i], DCellNodeID.HOST_SW)
         n1 = self.sws[str(id1)][1]
         n2 = self.sws[str(id2)][1]
-        self.addLink(n1, n2)
+        self.addLink(n1, n2, bw=self.bw)
 
   # Used by riplpox
   LAYER_EDGE = DCellNodeID.HOST_SW
