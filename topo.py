@@ -118,7 +118,7 @@ if __name__ == "__main__":
   #sim_failures(topo, net)
 
   print "done"
-  Popen("killall -9 iperf", shell=True).wait()
   monitor.terminate()
+  Popen("killall -9 iperf", shell=True).wait()
   net.stop()
 
