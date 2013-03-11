@@ -1,5 +1,5 @@
 from nodeid import DCellNodeID
-import sys
+import os, sys
 from time import sleep
 
 def sim_failures(topo, net = None):

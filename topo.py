@@ -33,12 +33,11 @@ def start_monitor():
 def start_iperf(net, src, dst):
   print "Starting iperf server..."
   server = net.getNodeByName(dst)
-  server.popen("iperf -s -p 5001", shell=True)
+  server.popen("iperf -s -p 5001 >%s/server.txt" % OUTPUT_DIR, shell=True)
 
   print "Starting iperf client..."
   client = net.getNodeByName(src)
-  client.popen("echo sfasdf >foo.txt", shell=True)
-  client.popen("iperf -c %s -p 5001 -t 60 -i 1 -Z bic" % server.IP(), shell=True)
+  client.popen("iperf -c %s -p 5001 -t 60 -i 1 -Z bic >%s/client.txt" % (server.IP(), OUTPUT_DIR), shell=True)
 
 class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
@@ -101,24 +100,24 @@ class DCellTopo(Topo):
     return [x[0].name_str() for x in self.sws.values() if x[0].type == layer]
 
   def down_nodes(self, node):
-    assert "host" in node
-    return [node.replace("host", "cpu")]
+    assert "h" in node
+    return [node.replace("h", "c")]
 
 if __name__ == "__main__":
   topo = DCellTopo()
   net = Mininet(topo = topo, host = CPULimitedHost, link = TCLink, controller = RemoteController, autoSetMacs = True)
   net.start()
 
-  #monitor = start_monitor()
-  start_iperf(net, "cpu_1_1", "cpu_5_4")
+  monitor = start_monitor()
+  start_iperf(net, "11c", "54c")
   print "Waiting..."
-  sleep(5)
+  sleep(10)
   #CLI(net)
 
   #sim_failures(topo, net)
 
   print "done"
-  #Popen("killall -9 iperf", shell=True).wait()
-  #monitor.terminate()
+  Popen("killall -9 iperf", shell=True).wait()
+  monitor.terminate()
   net.stop()
 

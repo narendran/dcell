@@ -2,8 +2,8 @@ from ripl.dctopo import NodeID
 
 class DCellNodeID(NodeID):
   SWITCH, HOST_SW, HOST_CPU = range(1, 4)
-  TYPES = ["sw", "host", "cpu"]
-  TYPE_MAP = {"sw": SWITCH, "host": HOST_SW, "cpu": HOST_CPU}
+  TYPES = ["s", "h", "c"]
+  TYPE_MAP = {"s": SWITCH, "h": HOST_SW, "c": HOST_CPU}
 
   # Level is only needed for DPID
   def __init__(self, level, prefix = None, type = 0, dpid = None, name = None):
@@ -22,16 +22,16 @@ class DCellNodeID(NodeID):
     self.type = dpid & 0xff
 
   def from_name(self, name):
-    l = name.split("_")
-    self.prefix = [int(x) for x in l[1:]]
-    self.type_str = l[0]
+    l = list(name)
+    self.prefix = [int(x) for x in l[:-1]]
+    self.type_str = l[-1]
     self.type = self.TYPE_MAP[self.type_str]
 
   def __str__(self):
     return self.name_str()
 
   def name_str(self):
-    return "_".join([self.type_str] + ["%d" % x for x in self.prefix])
+    return "".join(["%d" % x for x in self.prefix] + [self.type_str])
 
   # TODO: Can't go past DCell 1
   def ip_str(self):
