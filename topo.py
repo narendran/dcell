@@ -17,7 +17,7 @@ from time import sleep
 OUTPUT_DIR = "out"
 
 # Taken from PA 2 starter code
-def monitor_devs_ng(fname="%s/txrate.txt" % OUTPUT_DIR, interval_sec=0.01):
+def monitor_devs_ng(fname="%s/txrate.txt" % OUTPUT_DIR, interval_sec=1):
   """Uses bwm-ng tool to collect iface tx rate stats.  Very reliable."""
   print "Starting monitor..."
   cmd = ("sleep 1; bwm-ng -t %s -o csv "
@@ -31,13 +31,11 @@ def start_monitor():
   return p
 
 def start_iperf(net, src, dst):
-  print "Starting iperf server..."
   server = net.getNodeByName(dst)
   server.popen("iperf -s -p 5001 >%s/server.txt" % OUTPUT_DIR, shell=True)
 
-  print "Starting iperf client..."
   client = net.getNodeByName(src)
-  client.popen("iperf -c %s -p 5001 -t 60 -i 1 -Z bic >%s/client.txt" % (server.IP(), OUTPUT_DIR), shell=True)
+  client.popen("iperf -c %s -p 5001 -i 1 -Z bic >%s/client.txt" % (server.IP(), OUTPUT_DIR), shell=True)
 
 class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
@@ -109,16 +107,18 @@ if __name__ == "__main__":
   net = Mininet(topo = topo, host = CPULimitedHost, link = TCLink, controller = RemoteController, autoSetMacs = True)
   net.start()
 
-  monitor = start_monitor()
   start_iperf(net, "11c", "54c")
+  monitor = start_monitor()
   print "Waiting..."
-  sleep(10)
+  for i in range(30):
+    print ".",
+    sleep(1)
   #CLI(net)
 
   #sim_failures(topo, net)
 
   print "done"
-  Popen("killall -9 iperf", shell=True).wait()
   monitor.terminate()
+  Popen("killall -9 iperf bwm-ng", shell=True).wait()
   net.stop()
 
