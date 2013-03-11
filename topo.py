@@ -58,6 +58,8 @@ class DCellTopo(Topo):
 
   def link_down(self, *n):
     self.failed.append(n)
+  def link_up(self, *n):
+    self.failed.remove(n)
   def is_link_down(self, *n):
     return n in self.failed
 
@@ -109,13 +111,8 @@ if __name__ == "__main__":
 
   start_iperf(net, "11c", "54c")
   monitor = start_monitor()
-  print "Waiting..."
-  for i in range(30):
-    print ".",
-    sleep(1)
-  #CLI(net)
 
-  #sim_failures(topo, net)
+  sim_failures(topo, net)
 
   print "done"
   monitor.terminate()

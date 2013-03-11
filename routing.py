@@ -47,14 +47,12 @@ class DCellRouting(Routing):
         rr1 = self.get_route(n1, n1r, pkt)
         rr2 = self.get_route(n2r, dst, pkt)
 
-        newroute = r1[:-1] + rr1 + rr2
-        if rev: newroute.reverse()
-        return newroute
+        route = r1[:-1] + rr1 + rr2
     else:
         r1 = self.get_route(src, n1, pkt)
         r2 = self.get_route(n2, dst, pkt)
-
         route = r1 + r2
-        if rev: route.reverse()
-        return route
+
+    if rev: route.reverse()
+    return route
 
