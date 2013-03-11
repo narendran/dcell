@@ -33,10 +33,28 @@ class DCellRouting(Routing):
     n1 = self.topo.id_gen([s, d - 1], DCellNodeID.HOST_SW).name_str()
     n2 = self.topo.id_gen([d, s], DCellNodeID.HOST_SW).name_str()
 
-    r1 = self.get_route(src, n1, pkt)
-    r2 = self.get_route(n2, dst, pkt)
+    if self.topo.is_link_down(n1, n2):
+        n1r = ''
+        n2r = ''
+        for i in range(0, self.topo.n):
+            n1r = self.topo.id_gen([s, i+1], DCellNodeID.HOST_SW).name_str()
+            n2r = self.topo.id_gen([i+2, s], DCellNodeID.HOST_SW).name_str()
+            if n1 != n1r:
+                if not self.topo.is_link_down(n1, n1r):
+                    break
 
-    route = r1 + r2
-    if rev: route.reverse()
-    return route
+        r1 = self.get_route(src, n1, pkt)
+        rr1 = self.get_route(n1, n1r, pkt)
+        rr2 = self.get_route(n2r, dst, pkt)
+
+        newroute = r1[:-1] + rr1 + rr2
+        if rev: newroute.reverse()
+        return newroute
+    else:
+        r1 = self.get_route(src, n1, pkt)
+        r2 = self.get_route(n2, dst, pkt)
+
+        route = r1 + r2
+        if rev: route.reverse()
+        return route
 
