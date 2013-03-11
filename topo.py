@@ -6,36 +6,8 @@ from mininet.node import CPULimitedHost, RemoteController
 from mininet.net import Mininet
 from mininet.topo import Topo
 
-from failure import sim_failures
-from nodeid import DCellNodeID
-
+from experiment import *
 import sys
-from multiprocessing import Process
-from subprocess import Popen
-from time import sleep
-
-OUTPUT_DIR = "out"
-
-# Taken from PA 2 starter code
-def monitor_devs_ng(fname="%s/txrate.txt" % OUTPUT_DIR, interval_sec=1):
-  """Uses bwm-ng tool to collect iface tx rate stats.  Very reliable."""
-  print "Starting monitor..."
-  cmd = ("sleep 1; bwm-ng -t %s -o csv "
-         "-u bits -T rate -C ',' > %s" %
-         (interval_sec * 1000, fname))
-  Popen(cmd, shell=True).wait()
-
-def start_monitor():
-  p = Process(target=monitor_devs_ng, args=())
-  p.start()
-  return p
-
-def start_iperf(net, src, dst):
-  server = net.getNodeByName(dst)
-  server.popen("iperf -s -p 5001 >%s/server.txt" % OUTPUT_DIR, shell=True)
-
-  client = net.getNodeByName(src)
-  client.popen("iperf -c %s -p 5001 -i 1 -Z bic >%s/client.txt" % (server.IP(), OUTPUT_DIR), shell=True)
 
 class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
@@ -108,14 +80,8 @@ if __name__ == "__main__":
   topo = DCellTopo()
   net = Mininet(topo = topo, host = CPULimitedHost, link = TCLink, controller = RemoteController, autoSetMacs = True)
   net.start()
-
-  start_iperf(net, "11c", "54c")
-  monitor = start_monitor()
-
-  sim_failures(topo, net)
-
-  print "done"
-  monitor.terminate()
-  Popen("killall -9 iperf bwm-ng", shell=True).wait()
+  print
+  print "Ready to start experiment."
+  run_experiment(topo, net)
   net.stop()
 
