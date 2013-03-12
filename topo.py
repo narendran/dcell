@@ -8,6 +8,7 @@ from mininet.topo import Topo
 
 from experiment import *
 import sys
+from time import sleep
 
 class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
@@ -32,12 +33,12 @@ class DCellTopo(Topo):
     return DCellNodeID(self.level, *args, **kwargs)
 
   def link_down(self, *n):
-    self.failed.append(n)
     if self.controller: self.controller.clearFlowTables()
+    self.failed.append(n)
 
   def link_up(self, *n):
+    #if self.controller: self.controller.clearFlowTables()
     self.failed.remove(n)
-    if self.controller: self.controller.clearFlowTables()
 
   def is_link_down(self, *n):
     return n in self.failed
@@ -61,7 +62,6 @@ class DCellTopo(Topo):
         self.addLink(sw, host, bw=self.bw)
       return
 
-    # TODO: Generalize to DCell_k, k > 1
     for i in range(1, n + 2):
       self._create_dcell(prefix + [i], level - 1, n)
     for i in range(1, n + 1):
@@ -85,7 +85,6 @@ if __name__ == "__main__":
   topo = DCellTopo()
   net = Mininet(topo = topo, host = CPULimitedHost, link = TCLink, controller = RemoteController, autoSetMacs = True)
   net.start()
-  print "Ready to start experiment."
   run_experiment(topo, net)
   net.stop()
 

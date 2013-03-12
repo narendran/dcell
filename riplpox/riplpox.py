@@ -18,6 +18,7 @@ from pox.lib.packet.tcp import tcp
 from ripl.mn import topos
 
 import sys
+from time import sleep
 from util import buildTopo, getRouting
 
 oflog = logging.getLogger("openflow.of_01")
@@ -99,12 +100,32 @@ class RipLController(EventMixin):
     # TODO: generalize all_switches_up to a more general state machine.
     self.all_switches_up = False  # Sequences event handling.
     self.listenTo(core.openflow, priority=0)
-
-    # Give topology a way of clearing our flow tables
     self.t.controller = self
+    self.restored = 0
 
-  # Taken from pox/forwarding/l2_multi.py
+  def _handle_PortStatus(self, event):
+    if event.ofp.desc.state == 0:
+      self.restored += 1
+      if self.restored == 2:
+        print "Clear"
+        sleep(5)
+        self.clearFlowTables()
+  #    self.clearFlowTables()
+  #  # We only fail port 3
+  #  print "!!! %d %d" % (event.port, event.ofp.desc.state)
+  #  if event.port != 3: return
+
+  #  oldfail = self.fail
+  #  if event.ofp.desc.state == 1: # Down
+  #    if not self.fail: sleep(1) # Pause to avoid race conditions and nasty things
+  #    self.fail = True
+  #  elif event.ofp.desc.state == 0: # Up
+  #    if self.fail: sleep(1)
+  #    self.fail = False
+
+  #  if self.fail == oldfail: return
   def clearFlowTables(self):
+    # Taken from pox/forwarding/l2_multi.py
     clear = of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE)
     for sw in self.switches.itervalues():
       sw.connection.send(clear)
@@ -135,7 +156,7 @@ class RipLController(EventMixin):
     hash_ = self._ecmp_hash(packet)
     route = self.r.get_route(in_name, out_name, hash_)
     # XXX
-    log.info("route: %s" % route)
+    log.info("route from %s to %s: %s" % (in_name, out_name, route))
     match = of.ofp_match.from_packet(packet)
     for i, node in enumerate(route):
       node_dpid = self.t.id_gen(name = node).dpid
