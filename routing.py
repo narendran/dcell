@@ -10,7 +10,6 @@ class DCellRouting(Routing):
     t.start()
 
   def get_route(self, src, dst, pkt):
-    print "Route from %s to %s" % (src, dst)
     if src == dst: return [src]
 
     src_id = self.topo.id_gen(name = src)

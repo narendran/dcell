@@ -48,8 +48,6 @@ class DCellTopo(Topo):
       sw = self._add_node(prefix + [0], DCellNodeID.SWITCH)
       for i in range(1, n + 1):
         l = prefix + [i]
-        print ".",
-        sys.stdout.flush()
         host = self._add_node(l, DCellNodeID.HOST_SW)
         cpu  = self._add_node(l, DCellNodeID.HOST_CPU)
         self.addLink(host, cpu)
@@ -80,7 +78,6 @@ if __name__ == "__main__":
   topo = DCellTopo()
   net = Mininet(topo = topo, host = CPULimitedHost, link = TCLink, controller = RemoteController, autoSetMacs = True)
   net.start()
-  print
   print "Ready to start experiment."
   run_experiment(topo, net)
   net.stop()

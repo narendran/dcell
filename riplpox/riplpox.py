@@ -19,7 +19,11 @@ from ripl.mn import topos
 
 from util import buildTopo, getRouting
 
+oflog = logging.getLogger("openflow.of_01")
+oflog.setLevel(logging.WARNING)
+
 log = core.getLogger()
+log.setLevel(logging.WARNING)
 
 # Number of bytes to send for packet_ins
 MISS_SEND_LEN = 2000
@@ -120,7 +124,8 @@ class RipLController(EventMixin):
     out_name = self.t.id_gen(dpid = out_dpid).name_str()
     hash_ = self._ecmp_hash(packet)
     route = self.r.get_route(in_name, out_name, hash_)
-    log.info("route: %s" % route)
+    # XXX
+    log.warning("route: %s" % route)
     match = of.ofp_match.from_packet(packet)
     for i, node in enumerate(route):
       node_dpid = self.t.id_gen(name = node).dpid
@@ -254,6 +259,10 @@ class RipLController(EventMixin):
     sw_str = dpidToStr(event.dpid)
     log.info("Saw switch come up: %s", sw_str)
     name_str = self.t.id_gen(dpid = event.dpid).name_str()
+
+    print name_str,
+    sys.stdout.flush()
+
     if name_str not in self.t.switches():
       log.warn("Ignoring unknown switch %s" % sw_str)
       return
@@ -273,6 +282,9 @@ class RipLController(EventMixin):
       if self.mode == 'proactive':
         self._install_proactive_flows()
 
+  def _handle_PortStatus(self, event):
+    sw = self.topo.id_gen(dpid = event.dpid).name_str()
+    print "!! %s: %d" % (sw, event.ofp.desc.state)
 
 def launch(topo = None, routing = None, mode = None):
   """
