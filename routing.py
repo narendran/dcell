@@ -16,8 +16,10 @@ class DCellRouting(Routing):
     dst_id = self.topo.id_gen(name = dst)
 
     if src_id.prefix[:-1] == dst_id.prefix[:-1]:
-      sw = self.topo.id_gen(src_id.prefix[:-1] + [0], DCellNodeID.SWITCH)
-      return [src, sw.name_str(), dst]
+      sw = self.topo.id_gen(src_id.prefix[:-1] + [0], DCellNodeID.SWITCH).name_str()
+      # Handles cases where a packet gets stuck in teh middle of the network while we reset flow tables
+      if src == sw or dst == sw: return [src, dst]
+      return [src, sw, dst]
 
     if src_id.prefix > dst_id.prefix:
       rev = True
@@ -33,13 +35,10 @@ class DCellRouting(Routing):
     n2 = self.topo.id_gen([d, s], DCellNodeID.HOST_SW).name_str()
 
     if self.topo.is_link_down(n1, n2):
-        n1r = ''
-        n2r = ''
-        for i in range(0, self.topo.n):
+        for i in range(self.topo.n + 1):
             n1r = self.topo.id_gen([s, i+1], DCellNodeID.HOST_SW).name_str()
             n2r = self.topo.id_gen([i+2, s], DCellNodeID.HOST_SW).name_str()
-            if n1 != n1r:
-                if not self.topo.is_link_down(n1, n1r):
+            if n1 != n1r and not self.topo.is_link_down(n1r, n2r):
                     break
 
         r1 = self.get_route(src, n1, pkt)

@@ -12,7 +12,7 @@ def fail_link(topo, net, n1, n2, node = False):
     else: print "Failing link %s <-> %s" % (n1, n2)
     net.configLinkStatus(n1, n2, "down")
   if node:
-    my_sleep(5)
+    sleep(5)
     if net: print "Link state timeout"
   topo.link_down(n1, n2)
 
@@ -59,16 +59,16 @@ def run_experiment(topo, net = None):
     print "Starting experiment..."
 
   n1, n2 = ("14h", "51h")
-  my_sleep(5)
+  sleep(5)
   #my_sleep(34)
   fail_link(topo, net, n1, n2)
-  my_sleep(5)
+  sleep(5)
   #my_sleep(8)
   reset_link(topo, net, n1, n2)
-  my_sleep(5)
+  sleep(5)
   #my_sleep(62)
   fail_link(topo, net, n1, n2, True)
-  my_sleep(10)
+  sleep(10)
 
   if net:
     monitor.terminate()

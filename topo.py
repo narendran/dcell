@@ -13,6 +13,9 @@ class DCellTopo(Topo):
   def __init__(self, level=1, n=4):
     Topo.__init__(self)
 
+    # Set in riplpox.py
+    self.controller = None
+
     if level > 1:
       print "DCell levels above 1 don't work yet..."
       sys.exit(1)
@@ -30,8 +33,12 @@ class DCellTopo(Topo):
 
   def link_down(self, *n):
     self.failed.append(n)
+    if self.controller: self.controller.clearFlowTables()
+
   def link_up(self, *n):
     self.failed.remove(n)
+    if self.controller: self.controller.clearFlowTables()
+
   def is_link_down(self, *n):
     return n in self.failed
 

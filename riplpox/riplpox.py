@@ -17,6 +17,7 @@ from pox.lib.packet.tcp import tcp
 
 from ripl.mn import topos
 
+import sys
 from util import buildTopo, getRouting
 
 oflog = logging.getLogger("openflow.of_01")
@@ -99,6 +100,15 @@ class RipLController(EventMixin):
     self.all_switches_up = False  # Sequences event handling.
     self.listenTo(core.openflow, priority=0)
 
+    # Give topology a way of clearing our flow tables
+    self.t.controller = self
+
+  # Taken from pox/forwarding/l2_multi.py
+  def clearFlowTables(self):
+    clear = of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE)
+    for sw in self.switches.itervalues():
+      sw.connection.send(clear)
+
   def _raw_dpids(self, arr):
     "Convert a list of name strings (from Topo object) to numbers."
     return [self.t.id_gen(name = a).dpid for a in arr]
@@ -125,7 +135,7 @@ class RipLController(EventMixin):
     hash_ = self._ecmp_hash(packet)
     route = self.r.get_route(in_name, out_name, hash_)
     # XXX
-    log.warning("route: %s" % route)
+    log.info("route: %s" % route)
     match = of.ofp_match.from_packet(packet)
     for i, node in enumerate(route):
       node_dpid = self.t.id_gen(name = node).dpid
@@ -282,9 +292,11 @@ class RipLController(EventMixin):
       if self.mode == 'proactive':
         self._install_proactive_flows()
 
-  def _handle_PortStatus(self, event):
-    sw = self.topo.id_gen(dpid = event.dpid).name_str()
-    print "!! %s: %d" % (sw, event.ofp.desc.state)
+  #def _handle_PortStatus(self, event):
+  #  # If not eth3, not a link event we care about
+  #  if (event.port != 3: return
+  #  sw = self.t.id_gen(dpid = event.dpid).name_str()
+  #  print "!! %s: %d" % (sw, event.ofp.desc.state)
 
 def launch(topo = None, routing = None, mode = None):
   """
