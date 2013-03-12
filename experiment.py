@@ -44,35 +44,40 @@ def start_iperf(net, src, dst):
   client = net.getNodeByName(src)
   client.popen("iperf -c %s -p 5001 -i 1 -t 3600 -Z bic >%s/client.txt" % (server.IP(), OUTPUT_DIR), shell=True)
 
-def my_sleep(t, net):
+def my_sleep(t):
   for i in range(t):
     sleep(1)
-    if net: print "%d" % (t - i - 1),
+    print "%d" % (t - i - 1),
     sys.stdout.flush()
 
+def synchronize(net, time = 0):
+  fname = "sync.txt"
+  if net:
+    if time: my_sleep(time)
+    with open(fname, "w") as f: f.write("go")
+  else:
+    while not os.access(fname, os.R_OK): sleep(0.1)
+    os.remove(fname)
+    print "Sync %d" % time
+
 def run_experiment(topo, net = None):
-  fname = "start.txt"
   if net:
     start_iperf(net, "11c", "54c")
     sleep(3)
     monitor = start_monitor()
-    with open(fname, "w") as f: f.write("go")
-    print "Starting 1"
-  else:
-    while not os.access(fname, os.R_OK): sleep(0.1)
-    print "Starting 2"
+  synchronize(net)
+  print "Starting"
 
   n1, n2 = ("14h", "51h")
-  my_sleep(34, net)
+  synchronize(net, 34)
   fail_link(topo, net, n1, n2)
-  my_sleep(8, net)
+  synchronize(net, 8)
   reset_link(topo, net, n1, n2)
-  my_sleep(62, net)
+  synchronize(net, 62)
   fail_link(topo, net, n1, n2, True)
-  my_sleep(30, net)
+  synchronize(net, 30)
 
   if net:
     monitor.terminate()
     Popen("killall -9 iperf bwm-ng", shell=True).wait()
-    os.remove(fname)
     print "Done with experiment. Please type quit()."

@@ -101,15 +101,18 @@ class RipLController(EventMixin):
     self.all_switches_up = False  # Sequences event handling.
     self.listenTo(core.openflow, priority=0)
     self.t.controller = self
-    self.restored = 0
+    self.failed = 0
 
   def _handle_PortStatus(self, event):
-    if event.ofp.desc.state == 0:
-      self.restored += 1
-      if self.restored == 2:
-        print "Clear"
-        sleep(5)
-        self.clearFlowTables()
+    if event.ofp.desc.state == 1:
+      self.failed += 1
+      #if self.failed == 2: 
+      #  #sleep(1)
+      #  self.clearFlowTables()
+    elif event.ofp.desc.state == 0:
+      self.failed -= 1
+      if self.failed == 0: self.clearFlowTables()
+
   #    self.clearFlowTables()
   #  # We only fail port 3
   #  print "!!! %d %d" % (event.port, event.ofp.desc.state)
@@ -156,7 +159,7 @@ class RipLController(EventMixin):
     hash_ = self._ecmp_hash(packet)
     route = self.r.get_route(in_name, out_name, hash_)
     # XXX
-    log.info("route from %s to %s: %s" % (in_name, out_name, route))
+    log.warning("route from %s to %s: %s" % (in_name, out_name, route))
     match = of.ofp_match.from_packet(packet)
     for i, node in enumerate(route):
       node_dpid = self.t.id_gen(name = node).dpid

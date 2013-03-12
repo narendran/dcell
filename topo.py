@@ -37,6 +37,7 @@ class DCellTopo(Topo):
     self.failed.append(n)
 
   def link_up(self, *n):
+    # This causes problems for some reason
     #if self.controller: self.controller.clearFlowTables()
     self.failed.remove(n)
 
