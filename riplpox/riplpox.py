@@ -18,6 +18,7 @@ from pox.lib.packet.tcp import tcp
 from ripl.mn import topos
 
 import sys
+from time import sleep
 from util import buildTopo, getRouting
 
 oflog = logging.getLogger("openflow.of_01")
@@ -103,6 +104,7 @@ class RipLController(EventMixin):
     self.flows = []
 
   def resetFlowTables(self):
+    sleep(0.5)
     # Taken from pox/forwarding/l2_multi.py
     clear = of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE)
     for sw in self.switches.itervalues():
