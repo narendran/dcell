@@ -33,13 +33,12 @@ class DCellTopo(Topo):
     return DCellNodeID(self.level, *args, **kwargs)
 
   def link_down(self, *n):
-    if self.controller: self.controller.clearFlowTables()
     self.failed.append(n)
+    if self.controller: self.controller.clearFlowTables()
 
   def link_up(self, *n):
-    # This causes problems for some reason
-    #if self.controller: self.controller.clearFlowTables()
     self.failed.remove(n)
+    if self.controller: self.controller.clearFlowTables()
 
   def is_link_down(self, *n):
     return n in self.failed

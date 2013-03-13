@@ -102,16 +102,19 @@ class RipLController(EventMixin):
     self.listenTo(core.openflow, priority=0)
     self.t.controller = self
     self.failed = 0
+    self.flows = []
 
   def _handle_PortStatus(self, event):
     if event.ofp.desc.state == 1:
       self.failed += 1
       #if self.failed == 2: 
-      #  #sleep(1)
+      #  sleep(1)
       #  self.clearFlowTables()
     elif event.ofp.desc.state == 0:
       self.failed -= 1
-      if self.failed == 0: self.clearFlowTables()
+      #if self.failed == 0:
+      #  print "Full clear"
+      #  self.clearFlowTables()
 
   #    self.clearFlowTables()
   #  # We only fail port 3
@@ -132,6 +135,19 @@ class RipLController(EventMixin):
     clear = of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE)
     for sw in self.switches.itervalues():
       sw.connection.send(clear)
+
+    # Reset all the previously seen flows (otherwise disaster strikes)
+    for x in self.flows:
+      route = self.r.get_route(x[0], x[1], None)
+      #print "! %s" % route
+      for i, node in enumerate(route):
+        node_dpid = self.t.id_gen(name = node).dpid
+        if i < len(route) - 1:
+          next_node = route[i + 1]
+          out_port, next_in_port = self.t.port(node, next_node)
+        else:
+          out_port = x[2]
+        self.switches[node_dpid].install(out_port, x[3], idle_timeout = 10)
 
   def _raw_dpids(self, arr):
     "Convert a list of name strings (from Topo object) to numbers."
@@ -159,8 +175,11 @@ class RipLController(EventMixin):
     hash_ = self._ecmp_hash(packet)
     route = self.r.get_route(in_name, out_name, hash_)
     # XXX
-    log.warning("route from %s to %s: %s" % (in_name, out_name, route))
+    log.info("route from %s to %s: %s" % (in_name, out_name, route))
     match = of.ofp_match.from_packet(packet)
+    if (in_name == "11h" and out_name == "54h") or (in_name == "54h" and out_name == "11h"):
+      self.flows.append((in_name, out_name, final_out_port, match))
+      #print "!!! %s -> %s: %s" % (in_name, out_name, route)
     for i, node in enumerate(route):
       node_dpid = self.t.id_gen(name = node).dpid
       if i < len(route) - 1:
