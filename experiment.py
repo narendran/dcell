@@ -14,8 +14,6 @@ def fail_link(topo, net, n1, n2, node = False):
   if node:
     sleep(5)
     if net: print "Link state timeout"
-  # We pause for a second to allow all existing flows in the network to clear out before clearing flow tables
-  #else: sleep(1)
   topo.link_down(n1, n2)
 
 def reset_link(topo, net, n1, n2):

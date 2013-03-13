@@ -1,0 +1,16 @@
+Michael Chang
+Jim Liu
+CS 244
+DCell
+
+Steps to Reproduce our Results
+
+These steps should be performed on the CS244 Mininet EC2 instance. We have successfully performed this experiment on a c1.medium instnace.
+
+1. git clone https://bitbucket.org/seally_1186/dcell.git
+2. cd dcell
+3. git submodule update --init
+4. ./run.sh
+5. Wait until "Done with experiment. Please type quit()." is displayed. (This may be followed by "Killed.", which can safely be ignored.)
+6. Type "quit()".
+7. The plots are generated in plot.png and plot2.png.

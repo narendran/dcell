@@ -34,11 +34,11 @@ class DCellTopo(Topo):
 
   def link_down(self, *n):
     self.failed.append(n)
-    if self.controller: self.controller.clearFlowTables()
+    if self.controller: self.controller.resetFlowTables()
 
   def link_up(self, *n):
     self.failed.remove(n)
-    if self.controller: self.controller.clearFlowTables()
+    if self.controller: self.controller.resetFlowTables()
 
   def is_link_down(self, *n):
     return n in self.failed

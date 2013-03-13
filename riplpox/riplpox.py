@@ -18,7 +18,6 @@ from pox.lib.packet.tcp import tcp
 from ripl.mn import topos
 
 import sys
-from time import sleep
 from util import buildTopo, getRouting
 
 oflog = logging.getLogger("openflow.of_01")
@@ -101,36 +100,9 @@ class RipLController(EventMixin):
     self.all_switches_up = False  # Sequences event handling.
     self.listenTo(core.openflow, priority=0)
     self.t.controller = self
-    self.failed = 0
     self.flows = []
 
-  def _handle_PortStatus(self, event):
-    if event.ofp.desc.state == 1:
-      self.failed += 1
-      #if self.failed == 2: 
-      #  sleep(1)
-      #  self.clearFlowTables()
-    elif event.ofp.desc.state == 0:
-      self.failed -= 1
-      #if self.failed == 0:
-      #  print "Full clear"
-      #  self.clearFlowTables()
-
-  #    self.clearFlowTables()
-  #  # We only fail port 3
-  #  print "!!! %d %d" % (event.port, event.ofp.desc.state)
-  #  if event.port != 3: return
-
-  #  oldfail = self.fail
-  #  if event.ofp.desc.state == 1: # Down
-  #    if not self.fail: sleep(1) # Pause to avoid race conditions and nasty things
-  #    self.fail = True
-  #  elif event.ofp.desc.state == 0: # Up
-  #    if self.fail: sleep(1)
-  #    self.fail = False
-
-  #  if self.fail == oldfail: return
-  def clearFlowTables(self):
+  def resetFlowTables(self):
     # Taken from pox/forwarding/l2_multi.py
     clear = of.ofp_flow_mod(match=of.ofp_match(),command=of.OFPFC_DELETE)
     for sw in self.switches.itervalues():
@@ -139,7 +111,6 @@ class RipLController(EventMixin):
     # Reset all the previously seen flows (otherwise disaster strikes)
     for x in self.flows:
       route = self.r.get_route(x[0], x[1], None)
-      #print "! %s" % route
       for i, node in enumerate(route):
         node_dpid = self.t.id_gen(name = node).dpid
         if i < len(route) - 1:
@@ -174,12 +145,10 @@ class RipLController(EventMixin):
     out_name = self.t.id_gen(dpid = out_dpid).name_str()
     hash_ = self._ecmp_hash(packet)
     route = self.r.get_route(in_name, out_name, hash_)
-    # XXX
     log.info("route from %s to %s: %s" % (in_name, out_name, route))
     match = of.ofp_match.from_packet(packet)
     if (in_name == "11h" and out_name == "54h") or (in_name == "54h" and out_name == "11h"):
       self.flows.append((in_name, out_name, final_out_port, match))
-      #print "!!! %s -> %s: %s" % (in_name, out_name, route)
     for i, node in enumerate(route):
       node_dpid = self.t.id_gen(name = node).dpid
       if i < len(route) - 1:
